@@ -4,7 +4,7 @@ const router = express.Router();
 const { dataSource } = require('../db/data-source');
 const logger = require('../utils/logger')('Skill')
 const { isUndefined, isNotValidString } = require('../utils/validate');
-
+const appError = require('../utils/appError');
 router.get('/', async (req, res, next) => {
   try {
     const skillRepo = await dataSource.getRepository('Skill');
@@ -27,10 +27,7 @@ router.post('/', async (req, res, next) => {
 
     //驗證欄位是否符合格式
     if (isUndefined(name) || isNotValidString(name)) {
-      res.status(400), json({
-        status: 'failed',
-        message: '欄位未填寫正確'
-      })
+      next(appError(400, '欄位未填寫正確'));
       return
     }
 
@@ -43,11 +40,7 @@ router.post('/', async (req, res, next) => {
     })
 
     if (existSkill.length > 0) {
-      errorResponse(res, headers, 409, 'failed', '資料重複');
-      res.status(409).json({
-        status: 'failed',
-        message: '資料重複'
-      })
+      next(appError(409, '資料重複'));
       return
     }
 

@@ -3,6 +3,7 @@ const express = require('express');
 const logger = require('../utils/logger')('Coach');
 const { dataSource } = require('../db/data-source');
 const { isNotValidString, isUndefined, isNotValidInteger } = require('../utils/validate');
+const appError = require('../utils/appError');
 
 const router = express.Router();
 const coachRepo = dataSource.getRepository('Coach');
@@ -10,10 +11,7 @@ router.get('/', async (req, res, next) => {
   try {
     const { per, page } = req.query;
     if (isUndefined(per) || isUndefined(page) || isNotValidInteger(Number(per)) || isNotValidInteger(Number(page))) {
-      res.status(400).json({
-        status: 'failed',
-        message: '欄位未填寫正確'
-      })
+      next(appError(400, '欄位未填寫正確'));
       return
     }
     let take = Number(per);
@@ -50,10 +48,7 @@ router.get('/:coachId', async (req, res, next) => {
   try {
     const { coachId } = req.params;
     if (isNotValidString(coachId)) {
-      res.status(400).json({
-        status: "failed",
-        message: "欄位未填寫正確"
-      })
+      next(appError(400, '欄位未填寫正確'));
       return
     }
 
@@ -80,10 +75,7 @@ router.get('/:coachId', async (req, res, next) => {
     })
 
     if (!findCoach) {
-      res.status(400).json({
-        status: "failed",
-        message: "找不到該教練"
-      })
+      next(appError(400, '找不到該教練'));
       return
     }
 

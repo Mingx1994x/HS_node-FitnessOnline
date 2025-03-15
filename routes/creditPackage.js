@@ -3,6 +3,7 @@ const express = require('express')
 const router = express.Router()
 const { dataSource } = require('../db/data-source')
 const { isUndefined, isNotValidString, isNotValidInteger } = require('../utils/validate');
+const appError = require('../utils/appError');
 const logger = require('../utils/logger')('CreditPackage')
 
 router.get('/', async (req, res, next) => {
@@ -27,10 +28,7 @@ router.post('/', async (req, res, next) => {
 
     //驗證欄位是否符合格式
     if (isUndefined(name) || isUndefined(credit_amount) || isUndefined(price) || isNotValidString(name) || isNotValidInteger(credit_amount) || isNotValidInteger(price)) {
-      res.status(400).json({
-        status: 'failed',
-        message: '欄位未填寫正確'
-      })
+      next(appError(400, '欄位未填寫正確'));
       return
     }
 
@@ -42,10 +40,7 @@ router.post('/', async (req, res, next) => {
       }
     });
     if ((await existPackage).length > 0) {
-      res.status(409).json({
-        status: 'failed',
-        message: '資料重複'
-      })
+      next(appError(409, '資料重複'));
       return
     }
 
@@ -76,20 +71,14 @@ router.delete('/:creditPackageId', async (req, res, next) => {
 
     //驗證欄位是否符合格式
     if (isUndefined(deleteId) || isNotValidString(deleteId)) {
-      res.status(400).json({
-        status: 'failed',
-        message: 'ID錯誤'
-      })
+      next(appError(400, 'ID錯誤'));
       return
     }
 
     //驗證是否刪除成功資料庫資料
     const deleteResult = await dataSource.getRepository('CreditPackage').delete(deleteId);
     if (deleteResult.affected === 0) {
-      res.status(400).json({
-        status: 'failed',
-        message: 'ID錯誤'
-      })
+      next(appError(400, 'ID錯誤'));
       return
     }
 
