@@ -5,10 +5,11 @@ const bcrypt = require('bcrypt');
 const { dataSource } = require('../db/data-source');
 const logger = require('../utils/logger')('User');
 
-const { isUndefined, isNotValidUserName, isNotValidEmail, isNotValidUserPassword } = require('../utils/validate');
+const { isUndefined, isNotValidUserName, isNotValidEmail, isNotValidUserPassword, isNotValidString } = require('../utils/validate');
 // const appError = require('../utils/appError');
 const { appError, handleErrorAsync } = require('../utils/handleError');
 const { generateJWT } = require('../utils/jwtUtils');
+const isAuth = require('../middlewares/isAuth');
 
 const router = express.Router();
 
@@ -99,6 +100,54 @@ router.post('/login', handleErrorAsync(async (req, res, next) => {
     }
   })
 }));
+
+//取得使用者資料
+router.get('/profile', isAuth, handleErrorAsync(async (req, res, next) => {
+  const { id } = req.user;
+  if (isNotValidString(id)) {
+    return next(appError(400, '欄位未填寫正確'));
+  }
+  const findUser = await userRepo.findOneBy({
+    id
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      user: {
+        email: findUser.email,
+        name: findUser.name
+      }
+    }
+  })
+}))
+
+//編輯使用者資料
+router.put('/profile', isAuth, handleErrorAsync(async (req, res, next) => {
+  const { id } = req.user;
+  const { name } = req.body;
+  if (isNotValidString(id) || isUndefined(name) || isNotValidUserName(name)) {
+    return next(appError(400, '欄位未填寫正確'));
+  }
+
+  const findUser = await userRepo.findOneBy({ id });
+  if (findUser.name === name) {
+    return next(appError(400, '使用者名稱未變更'));
+  }
+
+  const updateResult = await userRepo.update(
+    { id },
+    { name }
+  );
+
+  if (updateResult.affected === 0) {
+    return next(appError(400, '更新使用者失敗'));
+  }
+
+  res.status(200).json({
+    status: "success",
+  })
+}))
 
 
 module.exports = router
