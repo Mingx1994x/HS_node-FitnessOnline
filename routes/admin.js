@@ -5,6 +5,7 @@ const logger = require('../utils/logger')('admin')
 const { isUndefined, isNotValidInteger, isNotValidString, isNotValidUrl, isNotValidImg } = require('../utils/validate');
 const { appError, handleErrorAsync } = require('../utils/handleError');
 const isAuth = require('../middlewares/isAuth');
+const isCoach = require('../middlewares/isCoach');
 
 
 const router = express.Router();
@@ -13,7 +14,7 @@ const coachRepo = dataSource.getRepository('Coach');
 const courseRepo = dataSource.getRepository('Course');
 
 //修改課程
-router.put('/coaches/courses/:courseId', isAuth, handleErrorAsync(async (req, res, next) => {
+router.put('/coaches/courses/:courseId', isAuth, isCoach, handleErrorAsync(async (req, res, next) => {
   const { courseId } = req.params;
   const { skill_id, name, description, start_at, end_at, max_participants, meeting_url } = req.body;
 
@@ -65,7 +66,7 @@ router.put('/coaches/courses/:courseId', isAuth, handleErrorAsync(async (req, re
 }))
 
 //新增課程
-router.post('/coaches/courses', isAuth, handleErrorAsync(async (req, res, next) => {
+router.post('/coaches/courses', isAuth, isCoach, handleErrorAsync(async (req, res, next) => {
   const { user_id, skill_id, name, description, start_at, end_at, max_participants, meeting_url } = req.body;
 
   if (isUndefined(user_id) || isNotValidString(user_id) || isUndefined(skill_id) || isNotValidString(skill_id) || isUndefined(name) || isNotValidString(name) || isUndefined(description) || isNotValidString(description) || isUndefined(start_at) || isNotValidString(start_at) || isUndefined(end_at) || isNotValidString(end_at) || isUndefined(max_participants) || isNotValidInteger(max_participants) || isUndefined(meeting_url) || isNotValidUrl(meeting_url)) {
