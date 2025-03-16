@@ -32,4 +32,5 @@ const verifyJWT = (token) => {
 
 module.exports = {
   generateJWT,
+  verifyJWT
 };

@@ -24,11 +24,11 @@ module.exports = {
     return !passwordRegex.test(value)
   },
   isNotValidUrl: (value) => {
-    return (value) => !(/^https:\/\/.+$/.test(value));
-    // return !value.startsWith('https')
+    const urlRegex = /^https:\/\/.+$/;
+    return !urlRegex.test(value);
   },
   isNotValidImg: (value) => {
-    let imgFormat = value.split('.').pop();
+    const imgFormat = value.split('.').pop();
     return !((imgFormat === 'png' || imgFormat === 'jpg'))
   }
 
