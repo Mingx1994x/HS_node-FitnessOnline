@@ -7,7 +7,7 @@ module.exports = {
     return typeof value !== "string" || value.trim().length === 0 || value === ""
   },
   isNotValidInteger: (value) => {
-    return !Number.isInteger(value) || value === 0
+    return !Number.isInteger(value) || Number(value) <= 0
   },
   isNotValidUserName: (value) => {
     //最少2個字，最多10個字，不可包含任何特殊符號與空白
@@ -15,7 +15,7 @@ module.exports = {
     return !userNameRegex.test(value)
   },
   isNotValidEmail: (value) => {
-    const emailRegex = /^\S+@\S+\.\S+$/;
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     return !emailRegex.test(value)
   },
   isNotValidUserPassword: (value) => {
@@ -24,7 +24,8 @@ module.exports = {
     return !passwordRegex.test(value)
   },
   isNotValidUrl: (value) => {
-    return !value.startsWith('https')
+    return (value) => !(/^https:\/\/.+$/.test(value));
+    // return !value.startsWith('https')
   },
   isNotValidImg: (value) => {
     let imgFormat = value.split('.').pop();

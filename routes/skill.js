@@ -63,7 +63,7 @@ router.post('/', async (req, res, next) => {
 
 router.delete('/:skillId', async (req, res, next) => {
   try {
-    let deleteId = req.params.skillId;
+    const deleteId = req.params.skillId;
 
     //驗證id格式是否正確
     if (isUndefined(deleteId) || isNotValidString(deleteId)) {
