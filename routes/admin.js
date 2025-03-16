@@ -7,7 +7,6 @@ const { appError, handleErrorAsync } = require('../utils/handleError');
 const isAuth = require('../middlewares/isAuth');
 const isCoach = require('../middlewares/isCoach');
 
-
 const router = express.Router();
 const userRepo = dataSource.getRepository('User');
 const coachRepo = dataSource.getRepository('Coach');
@@ -106,8 +105,6 @@ router.post('/coaches/courses', isAuth, isCoach, handleErrorAsync(async (req, re
   })
 }))
 
-
-
 //註冊教練身份
 router.post('/coaches/:userId', handleErrorAsync(async (req, res, next) => {
   const { userId } = req.params;
@@ -163,8 +160,5 @@ router.post('/coaches/:userId', handleErrorAsync(async (req, res, next) => {
     },
   })
 }))
-
-
-
 
 module.exports = router;

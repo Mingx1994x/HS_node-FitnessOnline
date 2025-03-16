@@ -8,6 +8,7 @@ const { appError, handleErrorAsync } = require('../utils/handleError');
 
 const skillRepo = dataSource.getRepository('Skill');
 
+//取得教練技能列表
 router.get('/', handleErrorAsync(async (req, res, next) => {
   const skills = await skillRepo.find({
     select: ['id', 'name']
@@ -18,6 +19,7 @@ router.get('/', handleErrorAsync(async (req, res, next) => {
   })
 }))
 
+//新增教練技能
 router.post('/', handleErrorAsync(async (req, res, next) => {
   const { name } = req.body;
   //驗證欄位是否符合格式
@@ -50,6 +52,7 @@ router.post('/', handleErrorAsync(async (req, res, next) => {
   })
 }))
 
+// 刪除教練技能
 router.delete('/:skillId', handleErrorAsync(async (req, res, next) => {
   const deleteId = req.params.skillId;
 

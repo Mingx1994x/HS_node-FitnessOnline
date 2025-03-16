@@ -3,91 +3,78 @@ const express = require('express')
 const router = express.Router()
 const { dataSource } = require('../db/data-source')
 const { isUndefined, isNotValidString, isNotValidInteger } = require('../utils/validate');
-const appError = require('../utils/appError');
+const { appError, handleErrorAsync } = require('../utils/handleError');
 const logger = require('../utils/logger')('CreditPackage')
 
-router.get('/', async (req, res, next) => {
-  try {
-    const creditPackageRepo = await dataSource.getRepository('CreditPackage');
-    const package = await creditPackageRepo.find({
-      select: ['id', 'name', 'credit_amount', 'price']
-    });
+const creditPackageRepo = dataSource.getRepository('CreditPackage');
 
-    res.status(200).json({
-      status: 'success',
-      data: package
-    })
-  } catch (error) {
-    next(error);
+//取得課程組合包
+router.get('/', handleErrorAsync(async (req, res, next) => {
+  const package = await creditPackageRepo.find({
+    select: ['id', 'name', 'credit_amount', 'price']
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: package
+  })
+}))
+
+//新增課程組合包
+router.post('/', handleErrorAsync(async (req, res, next) => {
+  const { name, credit_amount, price } = req.body;
+
+  //驗證欄位是否符合格式
+  if (isUndefined(name) || isUndefined(credit_amount) || isUndefined(price) || isNotValidString(name) || isNotValidInteger(credit_amount) || isNotValidInteger(price)) {
+    return next(appError(400, '欄位未填寫正確'));
   }
-})
 
-router.post('/', async (req, res, next) => {
-  try {
-    const { name, credit_amount, price } = req.body;
-
-    //驗證欄位是否符合格式
-    if (isUndefined(name) || isUndefined(credit_amount) || isUndefined(price) || isNotValidString(name) || isNotValidInteger(credit_amount) || isNotValidInteger(price)) {
-      next(appError(400, '欄位未填寫正確'));
-      return
+  //驗證資料庫內有無資料重複
+  const existPackage = creditPackageRepo.find({
+    where: {
+      name
     }
-
-    //驗證資料庫內有無資料重複
-    const creditPackageRepo = await dataSource.getRepository('CreditPackage');
-    const existPackage = creditPackageRepo.find({
-      where: {
-        name
-      }
-    });
-    if ((await existPackage).length > 0) {
-      next(appError(409, '資料重複'));
-      return
-    }
-
-    const newPackage = await creditPackageRepo.create({
-      name,
-      credit_amount,
-      price
-    });
-    const result = await creditPackageRepo.save(newPackage);
-
-    res.status(200).json({
-      status: "success",
-      data: {
-        id: result.id,
-        name: result.name,
-        credit_amount: result.credit_amount,
-        price: result.price
-      }
-    })
-  } catch (error) {
-    next(error);
+  });
+  if ((await existPackage).length > 0) {
+    return next(appError(409, '資料重複'));
   }
-})
 
-router.delete('/:creditPackageId', async (req, res, next) => {
-  try {
-    let deleteId = req.params.creditPackageId;
+  const newPackage = await creditPackageRepo.create({
+    name,
+    credit_amount,
+    price
+  });
+  const result = await creditPackageRepo.save(newPackage);
 
-    //驗證欄位是否符合格式
-    if (isUndefined(deleteId) || isNotValidString(deleteId)) {
-      next(appError(400, 'ID錯誤'));
-      return
+  res.status(200).json({
+    status: "success",
+    data: {
+      id: result.id,
+      name: result.name,
+      credit_amount: result.credit_amount,
+      price: result.price
     }
+  })
+}))
 
-    //驗證是否刪除成功資料庫資料
-    const deleteResult = await dataSource.getRepository('CreditPackage').delete(deleteId);
-    if (deleteResult.affected === 0) {
-      next(appError(400, 'ID錯誤'));
-      return
-    }
+//刪除課程組合包
+router.delete('/:creditPackageId', handleErrorAsync(async (req, res, next) => {
+  let deleteId = req.params.creditPackageId;
 
-    res.status(200).json({
-      status: "success",
-    })
-  } catch (error) {
-    next(error);
+  //驗證欄位是否符合格式
+  if (isUndefined(deleteId) || isNotValidString(deleteId)) {
+    return next(appError(400, 'ID錯誤'));
   }
-})
+
+  //驗證是否刪除成功資料庫資料
+  const deleteResult = await creditPackageRepo.delete(deleteId);
+  if (deleteResult.affected === 0) {
+    return next(appError(400, 'ID錯誤'));
+  }
+
+  res.status(200).json({
+    status: "success",
+  })
+}))
 
 module.exports = router
