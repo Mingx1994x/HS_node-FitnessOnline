@@ -3,13 +3,15 @@ const dotenv = require('dotenv')
 const result = dotenv.config()
 const db = require('./db')
 const web = require('./web')
+const jwtConfig = require('./jwtConfig')
 
 if (result.error) {
   throw result.error
 }
 const config = {
   db,
-  web
+  web,
+  jwtConfig
 }
 
 class ConfigManager {
@@ -22,7 +24,7 @@ class ConfigManager {
    * @throws Will throw an error if the configuration path is not found.
    */
 
-  static get (path) {
+  static get(path) {
     if (!path || typeof path !== 'string') {
       throw new Error(`incorrect path: ${path}`)
     }

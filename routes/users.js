@@ -8,8 +8,12 @@ const logger = require('../utils/logger')('User');
 const { isUndefined, isNotValidUserName, isNotValidEmail, isNotValidUserPassword } = require('../utils/validate');
 // const appError = require('../utils/appError');
 const { appError, handleErrorAsync } = require('../utils/handleError');
+const { generateJWT } = require('../utils/jwtUtils');
 
 const router = express.Router();
+
+const userRepo = dataSource.getRepository('User');
+//使用者註冊
 router.post('/signup', handleErrorAsync(async (req, res, next) => {
   const { name, email, password } = req.body;
 
@@ -21,7 +25,6 @@ router.post('/signup', handleErrorAsync(async (req, res, next) => {
     return next(appError(400, '密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字'));
   }
 
-  const userRepo = dataSource.getRepository('User');
   const existUser = userRepo.find({
     where: {
       email
@@ -52,7 +55,50 @@ router.post('/signup', handleErrorAsync(async (req, res, next) => {
       }
     }
   })
-}))
+}));
+
+//使用者登入
+router.post('/login', handleErrorAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  if (isUndefined(email) || isUndefined(password) || isNotValidEmail(email)) {
+    return next(appError(400, '欄位未填寫正確'));
+  }
+
+  if (isNotValidUserPassword(password)) {
+    return next(appError(400, '密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字'));
+  }
+
+  const findUser = await userRepo.findOne({
+    select: ['id', 'name', 'password', 'role'],
+    where: {
+      email
+    }
+  });
+
+  if (!findUser) {
+    return next(appError(400, '使用者不存在或密碼輸入錯誤'));
+  }
+
+  const isMatch = await bcrypt.compare(password, findUser.password)
+  if (!isMatch) {
+    return next(appError(400, '使用者不存在或密碼輸入錯誤'));
+  }
+  //JWT
+  const token = generateJWT({
+    id: findUser.id,
+    role: findUser.role
+  });
+  res.status(201).json({
+    status: 'success',
+    data: {
+      token,
+      user: {
+        name: findUser.name
+      }
+    }
+  })
+}));
 
 
 module.exports = router
